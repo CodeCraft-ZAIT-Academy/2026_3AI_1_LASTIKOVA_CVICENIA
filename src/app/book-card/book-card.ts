@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Book } from '../book';
 import { BookDetail } from '../book-detail/book-detail';
+import { Component, input, output } from '@angular/core';
 
 @Component({
   selector: 'app-book-card',
@@ -13,6 +14,8 @@ import { BookDetail } from '../book-detail/book-detail';
 })
 export class BookCard {
   book = input.required<Book>();
+  borrowed = output<void>();
+  returned = output<void>();
 
   showDetails: boolean = false;
   favorite: boolean = false;
@@ -46,10 +49,10 @@ genreColor(): string {
   }
 }
 borrow(): void {
-  this.book().available = false;
-}
+    this.borrowed.emit();
+  }
 
 giveBack(): void {
-  this.book().available = true;
-}
+    this.returned.emit();
+  }
 }
