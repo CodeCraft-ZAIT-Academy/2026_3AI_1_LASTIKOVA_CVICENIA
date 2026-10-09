@@ -2,7 +2,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Component, input, output } from '@angular/core';
-import { Book } from '../book';
+import { Book } from '../../../books/book';
 
 @Component({
   selector: 'app-cart',
