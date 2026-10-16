@@ -7,7 +7,7 @@ import { generateBooks } from './book-generator';
 })
 export class BookService {
 
-  myBooks: Book[] = [
+  private readonly myBooks: Book[] = [
     {
       id: 1,
       title: 'Hobit',
@@ -43,7 +43,7 @@ export class BookService {
     }
   ];
 
-  readonly maxBorrowed: number = 10;
+  private maxBorrowed: number = 10;
 
   private books: Book[] = this.limitBorrowed(
     this.myBooks.concat(generateBooks(40, 4))
@@ -71,7 +71,32 @@ export class BookService {
     return [...this.books];
   }
 
-    addBook(book: Book): void {
+  getBookById(id: number): Book | undefined {
+    return this.books.find(book => book.id === id);
+  }
+
+  getAvailableBooks(): Book[] {
+    return this.books.filter(book => book.available);
+  }
+
+  getFavoriteBooks(): Book[] {
+    return this.books.filter(book => book.favorite);
+  }
+
+  getTotalBookCount(): number {
+    return this.books.length;
+  }
+
+  getBorrowedBookCount(): number {
+    return this.borrowedBooks().length;
+  }
+
+  canBorrow(id: number): boolean {
+    const book = this.getBookById(id);
+    return !!book && book.available && this.borrowedBooks().length < this.maxBorrowed;
+  }
+
+  addBook(book: Book): void {
     const maxId = Math.max(0, ...this.books.map(b => b.id));
     this.books = [{ ...book, id: maxId + 1 }, ...this.books];
   }
@@ -85,14 +110,18 @@ export class BookService {
   deleteBook(id: number): void {
     this.books = this.books.filter(book => book.id !== id);
   }
+
   borrowedBooks(): Book[] {
     return this.books.filter(book => !book.available);
   }
 
   borrowBook(id: number): boolean {
-    if (this.borrowedBooks().length >= this.maxBorrowed) return false;
-    this.books = this.books.map(book =>
-      book.id === id ? { ...book, available: false } : book
+    if (!this.canBorrow(id)) {
+      return false;
+    }
+
+    this.books = this.books.map(b =>
+      b.id === id ? { ...b, available: false } : b
     );
     return true;
   }
@@ -102,10 +131,56 @@ export class BookService {
       book.id === id ? { ...book, available: true } : book
     );
   }
-  
+
   toggleFavorite(id: number): void {
     this.books = this.books.map(book =>
       book.id === id ? { ...book, favorite: !book.favorite } : book
     );
+  }
+
+  getFilteredBooks(
+    searchText: string,
+    availability: string,
+    sortBy: string
+  ): Book[] {
+    const text = searchText.trim().toLowerCase();
+
+    let result = this.books.filter(book =>
+      book.title.toLowerCase().includes(text) ||
+      book.author.toLowerCase().includes(text)
+    );
+
+    if (availability === 'available') {
+      result = result.filter(book => book.available);
+    } else if (availability === 'borrowed') {
+      result = result.filter(book => !book.available);
+    }
+
+    switch (sortBy) {
+      case 'title':
+        result = [...result].sort((a, b) =>
+          a.title.localeCompare(b.title));
+        break;
+      case 'year':
+        result = [...result].sort((a, b) => b.year - a.year);
+        break;
+      case 'rating':
+        result = [...result].sort((a, b) => b.rating - a.rating);
+        break;
+    }
+
+    return result;
+  }
+
+  countAvailableBooks(): number {
+    return this.books.filter(book => book.available).length;
+  }
+
+  countFavoriteBooks(): number {
+    return this.books.filter(book => book.favorite).length;
+  }
+
+  countAllBooks(): number {
+    return this.books.length;
   }
 }
