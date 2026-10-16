@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -11,7 +11,7 @@ import { BookCard } from '../book-card/book-card';
 import { BookForm } from '../book-form/book-form';
 import { Cart } from '../../../cart/components/cart/cart';
 import { Book } from '../../book';
-import { generateBooks } from '../../book-generator';
+import { BookService } from '../../book.service';
 
 @Component({
   selector: 'app-book-list',
@@ -32,63 +32,10 @@ import { generateBooks } from '../../book-generator';
   styleUrl: './book-list.css'
 })
 export class BookList {
-  myBooks: Book[] = [
-    {
-      id: 1,
-      title: 'Hobit',
-      author: 'J. R. R. Tolkien',
-      year: 1937,
-      available: true,
-      genre: 'Fantasy',
-      rating: 5,
-      pages: 310,
-      favorite: false
-    },
-    {
-      id: 2,
-      title: '1984',
-      author: 'George Orwell',
-      year: 1949,
-      available: false,
-      genre: 'Dystopia',
-      rating: 4,
-      pages: 328,
-      favorite: false
-    },
-    {
-      id: 3,
-      title: 'Malý princ',
-      author: 'Antoine de Saint-Exupéry',
-      year: 1943,
-      available: true,
-      genre: 'Fiction',
-      rating: 5,
-      pages: 96,
-      favorite: false
-    }
-  ];
+  private bookService = inject(BookService);
 
-  maxBorrowed: number = 10;
-
-  books: Book[] = this.limitBorrowed(this.myBooks.concat(generateBooks(40, 4)));
-
-  limitBorrowed(books: Book[]): Book[] {
-    let borrowedCount = 0;
-
-    return books.map(book => {
-      if (book.available) {
-        return book;
-      }
-
-      borrowedCount++;
-
-      if (borrowedCount > this.maxBorrowed) {
-        return { ...book, available: true };
-      }
-
-      return book;
-    });
-  }
+  maxBorrowed: number = this.bookService.maxBorrowed;
+  books: Book[] = this.bookService.getBooks();
 
   searchText: string = '';
   availability: string = 'all';
@@ -98,7 +45,8 @@ export class BookList {
     const text = this.searchText.trim().toLowerCase();
 
     let result = this.books.filter(book =>
-      book.title.toLowerCase().includes(text) || book.author.toLowerCase().includes(text)
+      book.title.toLowerCase().includes(text) ||
+      book.author.toLowerCase().includes(text)
     );
 
     if (this.availability === 'available') {
@@ -109,7 +57,9 @@ export class BookList {
 
     switch (this.sortBy) {
       case 'title':
-        result = [...result].sort((a, b) => a.title.localeCompare(b.title));
+        result = [...result].sort((a, b) =>
+          a.title.localeCompare(b.title)
+        );
         break;
       case 'year':
         result = [...result].sort((a, b) => b.year - a.year);
@@ -122,46 +72,50 @@ export class BookList {
     return result;
   }
 
+    refreshBooks(): void {
+    this.books = this.bookService.getBooks();
+  }
+
   clearSearch(): void {
     this.searchText = '';
     this.firstPage();
   }
 
   addBook(book: Book): void {
-    const maxId = Math.max(0, ...this.books.map(b => b.id));
-    this.books = [{ ...book, id: maxId + 1 }, ...this.books];
+    this.bookService.addBook(book);
+    this.refreshBooks();
     this.firstPage();
   }
 
   updateBook(updated: Book): void {
-    this.books = this.books.map(book => book.id === updated.id ? updated : book);
+    this.bookService.updateBook(updated);
+    this.refreshBooks();
   }
 
   deleteBook(deleted: Book): void {
-    this.books = this.books.filter(book => book.id !== deleted.id);
+    this.bookService.deleteBook(deleted.id);
+    this.refreshBooks();
 
-    if (this.currentPage > this.pageCount()) {
-      this.lastPage();
-    }
+  if (this.currentPage > this.pageCount()) {
+    this.lastPage();
   }
+}
 
   borrowedBooks(): Book[] {
-    return this.books.filter(book => !book.available);
+    return this.bookService.borrowedBooks();
   }
 
   borrow(book: Book): void {
-    if (this.borrowedBooks().length >= this.maxBorrowed) {
+    if (!this.bookService.borrowBook(book.id)) {
       alert(`Naraz môžeš mať požičaných najviac ${this.maxBorrowed} kníh. Najskôr nejakú vráť.`);
       return;
     }
-
-    const index = this.books.indexOf(book);
-    this.books[index] = { ...book, available: false };
+    this.refreshBooks();
   }
 
   giveBack(book: Book): void {
-    const index = this.books.indexOf(book);
-    this.books[index] = { ...book, available: true };
+    this.bookService.returnBook(book.id);
+    this.refreshBooks();
   }
 
   currentPage: number = 1;
@@ -169,7 +123,10 @@ export class BookList {
   pageSizes: number[] = [5, 10, 20];
 
   pageCount(): number {
-    return Math.max(1, Math.ceil(this.visibleBooks().length / this.pageSize));
+    return Math.max(
+      1,
+      Math.ceil(this.visibleBooks().length / this.pageSize)
+    );
   }
 
   isOnCurrentPage(index: number): boolean {
@@ -211,7 +168,10 @@ export class BookList {
   }
 
   lastShown(): number {
-    return Math.min(this.currentPage * this.pageSize, this.visibleBooks().length);
+    return Math.min(
+      this.currentPage * this.pageSize,
+      this.visibleBooks().length
+    );
   }
 
   pages(): number[] {
@@ -223,4 +183,9 @@ export class BookList {
 
     return result;
   }
+  toggleFavorite(book: Book): void {
+    this.bookService.toggleFavorite(book.id);
+    this.refreshBooks();
+  }
+
 }
