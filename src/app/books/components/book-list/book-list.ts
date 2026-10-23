@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -33,136 +33,105 @@ import { BookService } from '../../book.service';
 })
 export class BookList {
   private bookService = inject(BookService);
+  readonly books = this.bookService.books;
+  readonly borrowedBooks = this.bookService.borrowedBooks;
+  readonly maxBorrowed = this.bookService['maxBorrowed'];
 
-  maxBorrowed: number = this.bookService['maxBorrowed'];
-  books: Book[] = this.bookService.getBooks();
 
-  searchText: string = '';
-  availability: string = 'all';
-  sortBy: string = 'none';
-
-  visibleBooks(): Book[] {
-    return this.bookService.getFilteredBooks(
-      this.searchText,
-      this.availability,
-      this.sortBy
-    );
-  }
+  readonly searchText = signal('');
+  readonly availability = signal('all');
+  readonly sortBy = signal('none');
 
   refreshBooks(): void {
-    this.books = this.bookService.getBooks();
+    this.bookService.getBooks();
   }
 
   clearSearch(): void {
-    this.searchText = '';
-    this.firstPage();
-  }
+  this.searchText.set('');
+  this.firstPage();
+}
 
   addBook(book: Book): void {
-    this.bookService.addBook(book);
-    this.refreshBooks();
-    this.firstPage();
-  }
+  this.bookService.addBook(book);
+  this.firstPage();
+}
 
-  updateBook(updated: Book): void {
-    this.bookService.updateBook(updated);
-    this.refreshBooks();
-  }
+updateBook(updated: Book): void {
+  this.bookService.updateBook(updated);
+}
 
   deleteBook(deleted: Book): void {
     this.bookService.deleteBook(deleted.id);
-    this.refreshBooks();
-
-    if (this.currentPage > this.pageCount()) {
+      if (this.currentPage() > this.pageCount()) {
       this.lastPage();
     }
   }
 
-  borrowedBooks(): Book[] {
-    return this.bookService.borrowedBooks();
-  }
-
   borrow(book: Book): void {
-    if (!this.bookService.borrowBook(book.id)) {
-      alert('Knihu teraz nie je možné vypožičať. Skontroluj dostupnosť a limit výpožičiek.');
-      return;
-    }
-    this.refreshBooks();
+  if (!this.bookService.borrowBook(book.id)) {
+    alert('Knihu teraz nie je možné vypožičať.');
   }
+ }
 
   giveBack(book: Book): void {
-    this.bookService.returnBook(book.id);
-    this.refreshBooks();
-  }
+  this.bookService.returnBook(book.id);
+ }
 
-  currentPage: number = 1;
-  pageSize: number = 5;
-  pageSizes: number[] = [5, 10, 20];
+ readonly visibleBooks = computed(() =>
+  this.bookService.getFilteredBooks(
+    this.searchText(),
+    this.availability(),
+    this.sortBy()
+  )
+);
 
-  pageCount(): number {
-    return Math.max(
-      1,
-      Math.ceil(this.visibleBooks().length / this.pageSize)
-    );
-  }
+  readonly currentPage = signal(1);
+  readonly pageSize = signal(5);
+  readonly pageSizes = [5, 10, 20];
+
+  readonly pageCount = computed(() =>
+   Math.max(1, Math.ceil(this.visibleBooks().length / this.pageSize()))
+  );
+  readonly firstShown = computed(() =>
+   (this.currentPage() - 1) * this.pageSize() + 1
+  );
+  readonly lastShown = computed(() =>
+   Math.min(this.currentPage() * this.pageSize(), this.visibleBooks().length)
+  );
+  readonly pages = computed(() =>
+    Array.from({ length: this.pageCount() }, (_, i) => i + 1)
+  );
 
   isOnCurrentPage(index: number): boolean {
-    const start = (this.currentPage - 1) * this.pageSize;
-    return index >= start && index < start + this.pageSize;
+  const start = (this.currentPage() - 1) * this.pageSize();
+  return index >= start && index < start + this.pageSize();
   }
 
   previousPage(): void {
-    if (this.currentPage > 1) {
-      this.currentPage--;
+    if (this.currentPage() > 1) {
+      this.currentPage.set(this.currentPage() - 1);
     }
   }
 
   nextPage(): void {
-    if (this.currentPage < this.pageCount()) {
-      this.currentPage++;
-    }
-  }
+  this.currentPage.update(p => Math.min(this.pageCount(), p + 1));
+  } 
 
-  firstPage(): void {
-    this.currentPage = 1;
-  }
+  firstPage(): void { this.currentPage.set(1); }
 
-  lastPage(): void {
-    this.currentPage = this.pageCount();
-  }
+  lastPage(): void { this.currentPage.set(this.pageCount()); }
 
   goToPage(page: number): void {
-    this.currentPage = page;
+  this.currentPage.set(Math.max(1, Math.min(page, this.pageCount())));
   }
+
 
   setPageSize(size: number): void {
-    this.pageSize = size;
-    this.currentPage = 1;
-  }
-
-  firstShown(): number {
-    return (this.currentPage - 1) * this.pageSize + 1;
-  }
-
-  lastShown(): number {
-    return Math.min(
-      this.currentPage * this.pageSize,
-      this.visibleBooks().length
-    );
-  }
-
-  pages(): number[] {
-    const result: number[] = [];
-
-    for (let page = 1; page <= this.pageCount(); page++) {
-      result.push(page);
-    }
-
-    return result;
+  this.pageSize.set(size);
+  this.firstPage();
   }
 
   toggleFavorite(book: Book): void {
-    this.bookService.toggleFavorite(book.id);
-    this.refreshBooks();
-  }
+  this.bookService.toggleFavorite(book.id);
+ }
 }
