@@ -12,24 +12,6 @@
         (saved)="addBook($event); addPanel.close()">
       </app-book-form>
     </mat-expansion-panel>
-
-    <mat-expansion-panel>
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          <mat-icon>shopping_cart</mat-icon>
-          Košík
-        </mat-panel-title>
-
-        <mat-panel-description>
-          Požičané knihy: {{ borrowedBooks().length }} / {{ maxBorrowed }}
-        </mat-panel-description>
-      </mat-expansion-panel-header>
-
-      <app-cart
-        [books]="borrowedBooks()"
-        (returned)="giveBack($event)">
-      </app-cart>
-    </mat-expansion-panel>
   </mat-accordion>
 
   <h2>Zoznam kníh</h2>

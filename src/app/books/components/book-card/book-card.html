@@ -4,20 +4,20 @@
   [class.favorite]="book().favorite"
   [style.border-left-color]="genreColor()">
   <mat-card-header>
-   <span class="genre-icon" mat-card-avatar [style.color]="genreColor()">
-  @switch (book().genre) {
-    @case ('Fantasy') { <mat-icon>auto_awesome</mat-icon> }
-    @case ('Science Fiction') { <mat-icon>rocket_launch</mat-icon> }
-    @case ('Mystery') { <mat-icon>search</mat-icon> }
-    @case ('Detective') { <mat-icon>search</mat-icon> }
-    @case ('Romance') { <mat-icon>favorite</mat-icon> }
-    @case ('Horror') { <mat-icon>skull</mat-icon> }
-    @case ('Poetry') { <mat-icon>edit_note</mat-icon> }
-    @case ('Biography') { <mat-icon>person</mat-icon> }
-    @case ("Children's Literature") { <mat-icon>child_care</mat-icon> }
-    @default { <mat-icon>menu_book</mat-icon> }
-  }
-</span>
+    <span class="genre-icon" mat-card-avatar [style.color]="genreColor()">
+      @switch (book().genre) {
+        @case ('Fantasy') { <mat-icon>auto_awesome</mat-icon> }
+        @case ('Science Fiction') { <mat-icon>rocket_launch</mat-icon> }
+        @case ('Mystery') { <mat-icon>search</mat-icon> }
+        @case ('Detective') { <mat-icon>search</mat-icon> }
+        @case ('Romance') { <mat-icon>favorite</mat-icon> }
+        @case ('Horror') { <mat-icon>skull</mat-icon> }
+        @case ('Poetry') { <mat-icon>edit_note</mat-icon> }
+        @case ('Biography') { <mat-icon>person</mat-icon> }
+        @case ("Children's Literature") { <mat-icon>child_care</mat-icon> }
+        @default { <mat-icon>menu_book</mat-icon> }
+      }
+    </span>
     <mat-card-title>{{ book().title }}</mat-card-title>
     <mat-card-subtitle>{{ book().author }}</mat-card-subtitle>
     <span
@@ -47,16 +47,10 @@
       } @else {
         <p>Kniha je momentálne vypožičaná.</p>
       }
-
-      @if (showDetails()) {
-        <app-book-detail [book]="book()"></app-book-detail>
-      }
     </mat-card-content>
 
     <mat-card-actions>
-      <button matButton (click)="toggleDetails()">
-        @if (showDetails()) { Skryť detail } @else { Zobraziť detail }
-      </button>
+      <a matButton [href]="'/books/' + book().id">Detail</a>
 
       <button matButton="filled" [disabled]="!book().available" (click)="borrow()">
         Vypožičať

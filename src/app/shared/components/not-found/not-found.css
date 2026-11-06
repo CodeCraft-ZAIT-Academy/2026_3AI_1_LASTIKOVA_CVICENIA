@@ -1,0 +1,21 @@
+:host {
+  display: block;
+  text-align: center;
+  padding: 40px 0;
+}
+
+h1 {
+  font-size: 4rem;
+  margin-bottom: 0;
+  color: #1f3a5f;
+}
+
+h2 {
+  color: #334155;
+  margin-top: 8px;
+}
+
+p {
+  color: #64748b;
+  margin-bottom: 24px;
+}

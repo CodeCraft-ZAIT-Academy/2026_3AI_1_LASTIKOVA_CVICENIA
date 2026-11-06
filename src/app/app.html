@@ -1,8 +1,29 @@
 <mat-toolbar class="toolbar">
-  <mat-icon>menu_book</mat-icon>
-  <span>Library Management System</span>
+  <a routerLink="/books" class="brand-link">
+    <mat-icon>menu_book</mat-icon>
+    <span>Library Management System</span>
+  </a>
+
+  <span class="spacer"></span>
+
+  <a matIconButton routerLink="/books" routerLinkActive="active" aria-label="Knihy" title="Knihy">
+    <mat-icon>library_books</mat-icon>
+  </a>
+
+  <a matIconButton routerLink="/cart" routerLinkActive="active" aria-label="Košík" title="Košík">
+    <mat-icon 
+      [matBadge]="borrowedBooks().length" 
+      [matBadgeHidden]="borrowedBooks().length === 0"
+      matBadgeDescription="Počet požičaných kníh">
+      shopping_cart
+    </mat-icon>
+  </a>
+
+  <a matIconButton routerLink="/admin" routerLinkActive="active" aria-label="Správa kníh" title="Správa kníh">
+    <mat-icon>admin_panel_settings</mat-icon>
+  </a>
 </mat-toolbar>
 
 <main>
-  <app-book-list></app-book-list>
+  <router-outlet />
 </main>

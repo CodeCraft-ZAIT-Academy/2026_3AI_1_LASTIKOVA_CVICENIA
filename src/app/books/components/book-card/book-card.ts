@@ -3,13 +3,12 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Book } from '../../book';
-import { BookDetail } from '../book-detail/book-detail';
 import { BookForm } from '../book-form/book-form';
 import { getGenreColor } from '../../genre-colors';
 
 @Component({
   selector: 'app-book-card',
-  imports: [MatCardModule, MatButtonModule, MatIconModule, BookDetail, BookForm],
+  imports: [MatCardModule, MatButtonModule, MatIconModule, BookForm],
   templateUrl: './book-card.html',
   styleUrl: './book-card.css'
 })

@@ -1,0 +1,25 @@
+@if (book(); as book) {
+  <a matButton routerLink="/books">
+    <mat-icon>arrow_back</mat-icon> Späť na zoznam
+  </a>
+
+  <h1>{{ book.title }}</h1>
+  
+  <app-book-detail [book]="book" />
+
+  <div class="actions">
+    @if (book.available) {
+      <button matButton (click)="borrow(book)">Požičať</button>
+    } @else {
+      <button matButton (click)="giveBack(book)">Vrátiť</button>
+    }
+
+    <button matButton (click)="toggleFavorite(book)">
+      <mat-icon>{{ book.favorite ? 'favorite' : 'favorite_border' }}</mat-icon>
+      {{ book.favorite ? 'Odstrániť z obľúbených' : 'Pridať do obľúbených' }}
+    </button>
+  </div>
+} @else {
+  <p>Kniha s číslom {{ id() }} v knižnici neexistuje.</p>
+  <a matButton routerLink="/books">Späť na zoznam</a>
+}

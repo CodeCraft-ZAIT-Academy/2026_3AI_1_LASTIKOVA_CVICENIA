@@ -1,4 +1,3 @@
-
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,7 +9,6 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { FormsModule } from '@angular/forms';
 import { BookCard } from '../book-card/book-card';
 import { BookForm } from '../book-form/book-form';
-import { Cart } from '../../../cart/components/cart/cart';
 import { Book } from '../../book';
 import { BookService } from '../../book.service';
 
@@ -19,7 +17,6 @@ import { BookService } from '../../book.service';
   imports: [
     BookCard,
     BookForm,
-    Cart,
     FormsModule,
     MatButtonModule,
     MatIconModule,
@@ -37,7 +34,6 @@ export class BookList {
 
   readonly books = this.bookService.books;
   readonly borrowedBooks = this.bookService.borrowedBooks;
-  readonly maxBorrowed = this.bookService['maxBorrowed'];
 
   readonly totalBooks = computed(() => this.bookService.books().length);
   readonly totalAvailableBooks = computed(() => this.bookService.availableBooks().length);
