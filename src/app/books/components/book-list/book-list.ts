@@ -11,11 +11,13 @@ import { BookCard } from '../book-card/book-card';
 import { BookForm } from '../book-form/book-form';
 import { Book } from '../../book';
 import { BookService } from '../../book.service';
+import { ServerBookList } from '../server-book-list/server-book-list';
 
 @Component({
   selector: 'app-book-list',
   imports: [
     BookCard,
+    ServerBookList,
     BookForm,
     FormsModule,
     MatButtonModule,
