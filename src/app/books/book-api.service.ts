@@ -6,7 +6,7 @@ import { Book } from './book';
 @Injectable({
   providedIn: 'root'
 })
-public class BookApiService {
+export class BookApiService {
   private readonly http = inject(HttpClient);
 
   getBooks(): Observable<Book[]> {
