@@ -16,8 +16,8 @@ import { ServerBookList } from '../server-book-list/server-book-list';
 @Component({
   selector: 'app-book-list',
   imports: [
-    BookCard,
     ServerBookList,
+    BookCard,
     BookForm,
     FormsModule,
     MatButtonModule,
@@ -36,6 +36,8 @@ export class BookList {
 
   readonly books = this.bookService.books;
   readonly borrowedBooks = this.bookService.borrowedBooks;
+  readonly loading = this.bookService.loading;
+  readonly loadError = this.bookService.loadError;
 
   readonly totalBooks = computed(() => this.bookService.books().length);
   readonly totalAvailableBooks = computed(() => this.bookService.availableBooks().length);
