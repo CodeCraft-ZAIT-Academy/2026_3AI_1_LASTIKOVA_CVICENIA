@@ -7,7 +7,8 @@ import { Book } from './book';
 })
 export class BookService {
   private readonly bookApi = inject(BookApiService);
-
+  private readonly favoritesKey = 'favoriteBookIds'; 
+  
   readonly maxBorrowed: number = 10;
   readonly loading = signal(true);
   readonly loadError = signal('');
@@ -27,10 +28,27 @@ export class BookService {
     this.books().filter(book => book.favorite)
   );
 
+  private loadFavoriteIds(): number[] {
+  const saved = localStorage.getItem(this.favoritesKey);
+  if (!saved) return [];
+
+  try {
+    const ids = JSON.parse(saved);
+    return Array.isArray(ids) ? ids : [];
+  } catch {
+    return [];
+  }
+}
+
+private applySavedFavorites(books: Book[]): Book[] {
+  const ids = this.loadFavoriteIds();
+  return books.map(book => ({ ...book, favorite: ids.includes(book.id) }));
+}
+
   constructor() {
     this.bookApi.getBooks().subscribe({
       next: books => {
-        this._books.set(this.limitBorrowed(books));
+        this._books.set(this.limitBorrowed(this.applySavedFavorites(books)));
         this.loading.set(false);
       },
       error: error => {
@@ -40,6 +58,11 @@ export class BookService {
       }
     });
   }
+
+  private saveFavoriteIds(): void { 
+    const ids = this.books().filter(book => book.favorite).map(book => book.id); 
+    localStorage.setItem(this.favoritesKey, JSON.stringify(ids)); 
+  } 
 
   limitBorrowed(books: Book[]): Book[] {
     let borrowedCount = 0;
@@ -83,6 +106,21 @@ export class BookService {
     return this.borrowedBooks().length;
   }
 
+  getSortedBooks(sortBy: string): Book[] {
+    const result = [...this.books()];
+
+    switch (sortBy) {
+      case 'title':
+        return result.sort((a, b) => a.title.localeCompare(b.title));
+      case 'year':
+        return result.sort((a, b) => b.year - a.year);
+      case 'rating':
+        return result.sort((a, b) => b.rating - a.rating);
+      default:
+        return result;
+    }
+  }
+
   canBorrow(id: number): boolean {
     const book = this.getBookById(id);
 
@@ -111,6 +149,7 @@ export class BookService {
     this._books.update(books =>
       books.filter(book => book.id !== id)
     );
+    this.saveFavoriteIds(); 
   }
 
   borrowBook(id: number): boolean {
@@ -147,6 +186,7 @@ export class BookService {
           : book
       )
     );
+    this.saveFavoriteIds(); 
   }
 
   getFilteredBooks(

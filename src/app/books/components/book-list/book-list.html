@@ -16,8 +16,11 @@
 
   <h2>Zoznam kníh</h2>
 
-  <p>Celkový počet kníh: {{ totalBooks() }}</p>
-  <p>Dostupné knihy: {{ totalAvailableBooks() }}</p>
+  <p class="stats">
+    Všetkých kníh: {{ totalBooks() }}
+    · Dostupné: {{ (books() | bookFilter: '' : 'available').length }}
+    · Obľúbených: {{ (books() | bookFilter: '' : 'all' : true).length }}
+  </p>
   <p>Vypožičané knihy: {{ borrowedBooks().length }}</p>
 
   <div class="toolbar">
@@ -69,10 +72,10 @@
 
     <button
       matButton
-      [class.active]="showFavorites()"
-      (click)="showFavorites.update(value => !value); firstPage()">
+      [class.active]="favoritesOnly()"
+      (click)="favoritesOnly.update(value => !value); firstPage()">
       <mat-icon>favorite</mat-icon>
-      {{ showFavorites() ? 'Zobraziť všetky' : 'Iba obľúbené' }}
+      {{ favoritesOnly() ? 'Zobraziť všetky' : 'Iba obľúbené' }}
     </button>
 
     <button matButton (click)="resetFilters()">

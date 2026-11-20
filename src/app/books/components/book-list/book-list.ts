@@ -12,10 +12,12 @@ import { BookForm } from '../book-form/book-form';
 import { Book } from '../../book';
 import { BookService } from '../../book.service';
 import { ServerBookList } from '../server-book-list/server-book-list';
+import { BookFilterPipe } from '../../book-filter-pipe';
 
 @Component({
   selector: 'app-book-list',
   imports: [
+    BookFilterPipe,
     ServerBookList,
     BookCard,
     BookForm,
@@ -28,11 +30,13 @@ import { ServerBookList } from '../server-book-list/server-book-list';
     MatSelectModule,
     MatButtonToggleModule
   ],
+  providers: [BookFilterPipe],
   templateUrl: './book-list.html',
   styleUrl: './book-list.css'
 })
 export class BookList {
   private bookService = inject(BookService);
+  private bookFilter = inject(BookFilterPipe);
 
   readonly books = this.bookService.books;
   readonly borrowedBooks = this.bookService.borrowedBooks;
@@ -45,17 +49,56 @@ export class BookList {
   readonly searchText = signal('');
   readonly availability = signal('all');
   readonly sortBy = signal('none');
-  readonly showFavorites = signal(false);
+  readonly favoritesOnly = signal(false);
 
   readonly currentPage = signal(1);
   readonly pageSize = signal(5);
   readonly pageSizes = [5, 10, 20];
 
+  readonly visibleBooks = computed(() =>
+    this.bookFilter.transform(
+      this.bookService.getSortedBooks(this.sortBy()),
+      this.searchText(),
+      this.availability(),
+      this.favoritesOnly()
+    )
+  );
+
+  readonly pageCount = computed(() =>
+    Math.max(1, Math.ceil(this.visibleBooks().length / this.pageSize()))
+  );
+
+  readonly pagedBooks = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize();
+
+    return this.visibleBooks().slice(
+      start,
+      start + this.pageSize()
+    );
+  });
+
+  readonly firstShown = computed(() =>
+    this.visibleBooks().length === 0
+      ? 0
+      : (this.currentPage() - 1) * this.pageSize() + 1
+  );
+
+  readonly lastShown = computed(() =>
+    Math.min(
+      this.currentPage() * this.pageSize(),
+      this.visibleBooks().length
+    )
+  );
+
+  readonly pages = computed(() =>
+    Array.from({ length: this.pageCount() }, (_, i) => i + 1)
+  );
+
   resetFilters(): void {
     this.searchText.set('');
     this.availability.set('all');
     this.sortBy.set('none');
-    this.showFavorites.set(false);
+    this.favoritesOnly.set(false);
     this.firstPage();
   }
 
@@ -95,49 +138,9 @@ export class BookList {
     this.bookService.returnBook(book.id);
   }
 
-  readonly visibleBooks = computed(() => {
-    let result = this.bookService.getFilteredBooks(
-      this.searchText(),
-      this.availability(),
-      this.sortBy()
-    );
-
-    if (this.showFavorites()) {
-      result = result.filter(book => book.favorite);
-    }
-
-    return result;
-  });
-
-  readonly pageCount = computed(() =>
-    Math.max(1, Math.ceil(this.visibleBooks().length / this.pageSize()))
-  );
-
-  readonly pagedBooks = computed(() => {
-    const start = (this.currentPage() - 1) * this.pageSize();
-
-    return this.visibleBooks().slice(
-      start,
-      start + this.pageSize()
-    );
-  });
-
-  readonly firstShown = computed(() =>
-    this.visibleBooks().length === 0
-      ? 0
-      : (this.currentPage() - 1) * this.pageSize() + 1
-  );
-
-  readonly lastShown = computed(() =>
-    Math.min(
-      this.currentPage() * this.pageSize(),
-      this.visibleBooks().length
-    )
-  );
-
-  readonly pages = computed(() =>
-    Array.from({ length: this.pageCount() }, (_, i) => i + 1)
-  );
+  toggleFavorite(book: Book): void {
+    this.bookService.toggleFavorite(book.id);
+  }
 
   previousPage(): void {
     if (this.currentPage() > 1) {
@@ -164,9 +167,5 @@ export class BookList {
   setPageSize(size: number): void {
     this.pageSize.set(size);
     this.firstPage();
-  }
-
-  toggleFavorite(book: Book): void {
-    this.bookService.toggleFavorite(book.id);
   }
 }
